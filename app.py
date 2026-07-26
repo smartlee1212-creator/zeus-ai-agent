@@ -77,7 +77,7 @@ def api_ask():
     
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-1.5-flash',
             contents=prompt
         )
         reply = response.text if response and response.text else "The oracle returned an empty response."
