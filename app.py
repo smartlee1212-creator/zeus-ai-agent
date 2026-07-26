@@ -83,7 +83,6 @@ def api_ask():
         reply = response.text if response and response.text else "The oracle returned an empty response."
     except Exception as e:
         try:
-            # Fallback model attempt if primary errors out
             response = client.models.generate_content(
                 model='gemini-flash',
                 contents=prompt
@@ -104,7 +103,7 @@ HTML_LOGIN = """
 <body style="background: #0f172a url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed; background-size: cover; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
     <div style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); padding: 30px; border-radius: 12px; width: 320px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.1);">
         <h2 style="color: #fff; text-align: center; margin-top: 0; font-weight: 500;">Welcome Back</h2>
-        <p style="color: #64748b; text-align: center; font-size: 12px; margin-top: -5px; margin-bottom: 15px;">Default: admin@zeus.com / adminpassword</p>
+        <p style="color: #64748b; text-align: center; font-size: 12px; margin-top: -5px; margin-bottom: 15px;">Login: admin@zeus.com / adminpassword</p>
         {% if error %}<p style="color: #f87171; text-align: center; font-size: 13px; margin-bottom: 15px;">{{ error }}</p>{% endif %}
         <form method="POST">
             <label style="color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Email Address</label><br>
@@ -127,21 +126,16 @@ HTML_DASHBOARD = """
 </head>
 <body style="background: #0f172a url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed; background-size: cover; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column;">
     
-    <!-- Top Navigation Bar -->
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
         <span style="font-weight: 600; font-size: 16px; letter-spacing: 0.5px;">Chat Assistant</span>
         <a href="/logout" style="color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: 500;">Logout</a>
     </div>
 
-    <!-- Main Chat Container -->
     <div style="flex: 1; max-width: 700px; width: 100%; margin: 20px auto; display: flex; flex-direction: column; padding: 0 15px; box-sizing: border-box; overflow: hidden;">
-        
-        <!-- Chat History Box -->
         <div id="chat-box" style="flex: 1; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); padding: 20px; overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px;">
             <div style="color: #64748b; text-align: center; font-size: 13px; margin-top: auto; margin-bottom: auto;">How can I help you today?</div>
         </div>
 
-        <!-- Input Area -->
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
             <input type="text" id="prompt-input" placeholder="Type a message..." style="flex: 1; padding: 14px 16px; background: rgba(30, 41, 59, 0.85); color: #fff; border: 1px solid #334155; border-radius: 8px; outline: none; font-size: 14px;" onkeydown="if(event.key === 'Enter') askAI();">
             <button onclick="askAI()" style="padding: 0 20px; background: #3b82f6; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">Send</button>
@@ -186,3 +180,4 @@ HTML_DASHBOARD = """
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+    
