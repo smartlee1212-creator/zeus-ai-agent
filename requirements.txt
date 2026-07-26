@@ -4,4 +4,4 @@ werkzeug
 bleach
 requests
 gunicorn
-google-generativeai
+google-genai
