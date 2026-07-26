@@ -213,12 +213,13 @@ HTML_DASHBOARD = """
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: prompt })
-            });
+                
+                const data = await response.json();
+        chatBox.innerHTML += data.response;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    
 
-          const data = await response.json();
-        chatBox.innerHTML += '<div>' + data.response + '</div>';
-      chatBox.scrollTop = chatBox.scrollHeight;
-}
 </script>
 </body>
 </html
