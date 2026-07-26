@@ -108,55 +108,62 @@ HTML_LOGIN = """
 <!DOCTYPE html>
 <html>
 <head><title>Zeus Login</title></head>
-<body style="font-family:sans-serif; background:#121212; color:#fff;">
-    <form method="POST" style="background:#1e1e1e; padding:20px;">
-        <h2>Zeus Agent Login</h2>
-        <p style="color:red;">{{ error }}</p>
-        <label>Username:</label><br>
-        <input type="text" name="username" required style="width:100%;"><br>
-        <label>Password:</label><br>
-        <input type="password" name="password" required style="width:100%;"><br>
-        <button type="submit" style="width:100%; padding:10px;">Login</button>
-    </form>
+<body style="background:url('https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?q=80&w=1000&auto=format&fit=crop') no-repeat center center fixed; background-size:cover; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;">
+    <div style="background:rgba(18, 18, 18, 0.85); padding:25px; border-radius:10px; width:280px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333;">
+        <h2 style="color:#fff; text-align:center; margin-top:0;">Zeus Agent Login</h2>
+        {% if error %}<p style="color:#ff6b6b; text-align:center; font-size:14px;">{{error}}</p>{% endif %}
+        <form method="POST">
+            <label style="color:#ccc; font-size:14px;">Username:</label><br>
+            <input type="text" name="username" style="width:100%; padding:8px; margin:5px 0 15px 0; background:#222; color:#fff; border:1px solid #444; border-radius:4px; box-sizing:border-box;"><br>
+            <label style="color:#ccc; font-size:14px;">Password:</label><br>
+            <input type="password" name="password" style="width:100%; padding:8px; margin:5px 0 20px 0; background:#222; color:#fff; border:1px solid #444; border-radius:4px; box-sizing:border-box;"><br>
+            <button type="submit" style="width:100%; padding:10px; background:#007bff; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Login</button>
+        </form>
+    </div>
 </body>
 </html>
 """
-
 
 HTML_DASHBOARD = """
 <!DOCTYPE html>
 <html>
-<head><title>Zeus AI Agent</title></head>
-<body style="font-family:sans-serif; background:#121212; color:#fff; margin:0; padding:20px;">
-    <h2>Zeus AI Agent Dashboard</h2>
-    <div id="chatBox" style="border:1px solid #444; height:300px; overflow-y:scroll; padding:10px; margin-bottom:10px; background:#1e1e1e;"></div>
-    <input type="text" id="promptInput" placeholder="Ask Zeus a story or history..." style="width:80%; padding:8px;">
-    <button onclick="sendPrompt()" style="width:18%; padding:8px; background:#28a745; color:#fff; border:none;">Send</button>
+<head><title>Zeus AI Agent Dashboard</title></head>
+<body style="background: linear-gradient(rgba(20, 10, 10, 0.7), rgba(10, 5, 5, 0.8)), url('https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?q=80&w=1000&auto=format&fit=crop') no-repeat center center fixed; background-size:cover; color:#fff; font-family:sans-serif; padding:20px;">
+    <div style="max-width: 600px; margin: auto;">
+        <h2>Zeus AI Agent Dashboard</h2>
+        <div id="chat-box" style="background:rgba(15, 15, 15, 0.9); padding:15px; height:350px; overflow-y:scroll; border:1px solid #333; border-radius:8px; margin-bottom:15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);"></div>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="prompt-input" placeholder="Ask Zeus a story or history..." style="flex:1; padding:12px; background:rgba(30,30,30,0.9); color:#fff; border:1px solid #444; border-radius:4px;">
+            <button onclick="askZeus()" style="padding:12px 20px; background:#28a745; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Send</button>
+        </div>
+    </div>
 
     <script>
-        async function sendPrompt() {
-            const input = document.getElementById('promptInput');
-            const chatBox = document.getElementById('chatBox');
-            const prompt = input.value;
-            if(!prompt) return;
-
-            chatBox.innerHTML += "<div><b>You:</b> " + prompt + "</div>";
-            input.value = "";
-
-            const response = await fetch('/api/ask', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: prompt })
-            });
-
-            const data = await response.json();
-            chatBox.innerHTML += "<div><b>Zeus:</b> " + data.response + "</div>";
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+    async function askZeus() {
+        let prompt = document.getElementById('prompt-input').value;
+        if (!prompt) return;
+        let chatBox = document.getElementById('chat-box');
+        chatBox.innerHTML += `<div style="margin-bottom:10px;"><b>You:</b> ${prompt}</div>`;
+        document.getElementById('prompt-input').value = '';
+        
+        let res = await fetch('/api/ask', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({prompt: prompt})
+        });
+        let data = await res.json();
+        chatBox.innerHTML += `<div style="margin-bottom:10px; color:#ffda79;"><b>Zeus:</b> ${data.response}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
     </script>
 </body>
 </html>
 """
+
+
+
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
