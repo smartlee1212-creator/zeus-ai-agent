@@ -18,14 +18,14 @@ def init_db():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL
         )
     """)
-    cursor.execute("SELECT * FROM users WHERE username = 'admin'")
+    cursor.execute("SELECT * FROM users WHERE email = 'admin@zeus.com'")
     if not cursor.fetchone():
         hashed_pw = generate_password_hash("adminpassword")
-        cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", ("admin", hashed_pw))
+        cursor.execute("INSERT INTO users (email, password) VALUES (?, ?)", ("admin@zeus.com", hashed_pw))
     conn.commit()
     conn.close()
 
@@ -43,18 +43,18 @@ def login_required(f):
 def login():
     error = None
     if request.method == 'POST':
-        username = request.form.get('username')
+        email = request.form.get('email')
         password = request.form.get('password')
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
-        cursor.execute("SELECT password FROM users WHERE username = ?", (username,))
+        cursor.execute("SELECT password FROM users WHERE email = ?", (email,))
         row = cursor.fetchone()
         conn.close()
         if row and check_password_hash(row[0], password):
             session['logged_in'] = True
             return redirect(url_for('index'))
         else:
-            error = 'Invalid Credentials'
+            error = 'Invalid Email or Password'
     return render_template_string(HTML_LOGIN, error=error)
 
 @app.route('/logout')
@@ -70,16 +70,28 @@ def index():
 @app.route('/api/ask', methods=['POST'])
 @login_required
 def api_ask():
-    data = request.get_json()
+    data = request.get_json() or {}
     prompt = bleach.clean(data.get('prompt', ''))
+    if not prompt:
+        return jsonify({"response": "Please provide a valid prompt."})
+    
     try:
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt
         )
-        reply = response.text
+        reply = response.text if response and response.text else "The oracle returned an empty response."
     except Exception as e:
-        reply = f"An error occurred: {str(e)}"
+        try:
+            # Fallback model attempt if primary errors out
+            response = client.models.generate_content(
+                model='gemini-flash',
+                contents=prompt
+            )
+            reply = response.text if response and response.text else "The oracle returned an empty response."
+        except Exception as inner_e:
+            reply = f"System notice: Unable to fetch response at this moment. ({str(inner_e)})"
+            
     return jsonify({"response": reply})
 
 HTML_LOGIN = """
@@ -92,10 +104,11 @@ HTML_LOGIN = """
 <body style="background: #0f172a url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed; background-size: cover; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
     <div style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); padding: 30px; border-radius: 12px; width: 320px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.1);">
         <h2 style="color: #fff; text-align: center; margin-top: 0; font-weight: 500;">Welcome Back</h2>
+        <p style="color: #64748b; text-align: center; font-size: 12px; margin-top: -5px; margin-bottom: 15px;">Default: admin@zeus.com / adminpassword</p>
         {% if error %}<p style="color: #f87171; text-align: center; font-size: 13px; margin-bottom: 15px;">{{ error }}</p>{% endif %}
         <form method="POST">
-            <label style="color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Username</label><br>
-            <input type="text" name="username" required style="width: 100%; padding: 10px; margin: 6px 0 16px 0; background: rgba(30, 41, 59, 0.8); color: #fff; border: 1px solid #334155; border-radius: 6px; box-sizing: border-box; outline: none;"><br>
+            <label style="color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Email Address</label><br>
+            <input type="email" name="email" required style="width: 100%; padding: 10px; margin: 6px 0 16px 0; background: rgba(30, 41, 59, 0.8); color: #fff; border: 1px solid #334155; border-radius: 6px; box-sizing: border-box; outline: none;"><br>
             <label style="color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Password</label><br>
             <input type="password" name="password" required style="width: 100%; padding: 10px; margin: 6px 0 20px 0; background: rgba(30, 41, 59, 0.8); color: #fff; border: 1px solid #334155; border-radius: 6px; box-sizing: border-box; outline: none;"><br>
             <button type="submit" style="width: 100%; padding: 12px; background: #3b82f6; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px;">Sign In</button>
@@ -110,7 +123,7 @@ HTML_DASHBOARD = """
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat</title>
+    <title>Chat Assistant</title>
 </head>
 <body style="background: #0f172a url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed; background-size: cover; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column;">
     
@@ -143,17 +156,14 @@ HTML_DASHBOARD = """
         
         let chatBox = document.getElementById('chat-box');
         
-        // Remove placeholder text if it's the first message
         if (chatBox.children.length === 1 && chatBox.children[0].style.textAlign === 'center') {
             chatBox.innerHTML = '';
         }
 
-        // Append User Message
         chatBox.innerHTML += `<div style="align-self: flex-end; background: #2563eb; color: #fff; padding: 10px 14px; border-radius: 10px; max-width: 80%; word-break: break-word; font-size: 14px;">${prompt}</div>`;
         inputField.value = '';
         chatBox.scrollTop = chatBox.scrollHeight;
 
-        // Fetch AI Response
         try {
             let res = await fetch('/api/ask', {
                 method: 'POST',
@@ -162,7 +172,6 @@ HTML_DASHBOARD = """
             });
             let data = await res.json();
             
-            // Append AI Message
             chatBox.innerHTML += `<div style="align-self: flex-start; background: #1e293b; color: #f8fafc; padding: 10px 14px; border-radius: 10px; max-width: 80%; word-break: break-word; font-size: 14px; border: 1px solid #334155;">${data.response}</div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
         } catch (err) {
@@ -177,4 +186,3 @@ HTML_DASHBOARD = """
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-    
