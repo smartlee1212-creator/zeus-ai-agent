@@ -216,15 +216,19 @@ HTML_DASHBOARD = """
             });
 
           const data = await response.json();
-              chatBox.innerHTML += `<div class="msg zeus-msg"><strong>Zeus 🦜:</strong> ${data.response}</div>`;
+              
+
+    chatBox.innerHTML += `<div class="msg zeus-msg"><strong>Zeus 🦜:</strong> ${data.response}</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
+    
+    
 }
 </script>
 
 
     
 </body>
-</html>
+</html
 """
 
 # ----------------------------------------------------
