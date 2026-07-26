@@ -77,7 +77,7 @@ def api_ask():
     try:
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=f"You are Zeus, an ancient god of history and world storytelling. Answer this query in character: {prompt}"
+            contents=f"You are Zeus, ancient ruler of Olympus, god of thunder, sky, and cosmic law. Answer this query in your majestic, powerful, and wise character: {prompt}"
         )
         reply = response.text
     except Exception as e:
@@ -88,8 +88,8 @@ HTML_LOGIN = """
 <!DOCTYPE html>
 <html>
 <head><title>Zeus Login</title></head>
-<body style="background:url('https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?q=80&w=1000&auto=format&fit=crop') no-repeat center center fixed; background-size:cover; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;">
-    <div style="background:rgba(18, 18, 18, 0.85); padding:25px; border-radius:10px; width:280px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333;">
+<body style="background:url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed; background-size:cover; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;">
+    <div style="background:rgba(18, 18, 18, 0.9); padding:25px; border-radius:10px; width:280px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); border: 1px solid #444;">
         <h2 style="color:#fff; text-align:center; margin-top:0;">Zeus Agent Login</h2>
         {% if error %}<p style="color:#ff6b6b; text-align:center; font-size:14px;">{{error}}</p>{% endif %}
         <form method="POST">
@@ -108,15 +108,15 @@ HTML_DASHBOARD = """
 <!DOCTYPE html>
 <html>
 <head><title>Zeus AI Agent Dashboard</title></head>
-<body style="background: linear-gradient(rgba(20, 10, 10, 0.7), rgba(10, 5, 5, 0.8)), url('https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?q=80&w=1000&auto=format&fit=crop') no-repeat center center fixed; background-size:cover; color:#fff; font-family:sans-serif; padding:20px;">
-    <div style="max-width: 600px; margin: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>Zeus AI Agent Dashboard</h2>
-            <a href="/logout" style="color: #ff6b6b; text-decoration: none; font-weight: bold;">Logout</a>
+<body style="background:url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed; background-size:cover; color:#fff; font-family:sans-serif; margin:0; height:100vh; display:flex; flex-direction:column; justify-content:flex-end; padding-bottom:30px;">
+    <div style="max-width: 600px; width:90%; margin: auto; background:rgba(15, 15, 15, 0.85); padding:20px; border-radius:12px; border:1px solid #444; box-shadow: 0 8px 32px rgba(0,0,0,0.9);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h2 style="margin:0; font-size:18px; color:#ffda79;">Zeus AI Agent Dashboard</h2>
+            <a href="/logout" style="color: #ff6b6b; text-decoration: none; font-weight: bold; font-size:14px;">Logout</a>
         </div>
-        <div id="chat-box" style="background:rgba(15, 15, 15, 0.9); padding:15px; height:350px; overflow-y:scroll; border:1px solid #333; border-radius:8px; margin-bottom:15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);"></div>
+        <div id="chat-box" style="background:rgba(10, 10, 10, 0.95); padding:15px; height:300px; overflow-y:scroll; border:1px solid #333; border-radius:8px; margin-bottom:15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);"></div>
         <div style="display:flex; gap:10px;">
-            <input type="text" id="prompt-input" placeholder="Ask Zeus a story or history..." style="flex:1; padding:12px; background:rgba(30,30,30,0.9); color:#fff; border:1px solid #444; border-radius:4px;">
+            <input type="text" id="prompt-input" placeholder="Ask Zeus a story or history..." style="flex:1; padding:12px; background:rgba(30,30,30,0.9); color:#fff; border:1px solid #444; border-radius:4px; outline:none;">
             <button onclick="askZeus()" style="padding:12px 20px; background:#28a745; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Send</button>
         </div>
     </div>
@@ -126,7 +126,7 @@ HTML_DASHBOARD = """
         let prompt = document.getElementById('prompt-input').value;
         if (!prompt) return;
         let chatBox = document.getElementById('chat-box');
-        chatBox.innerHTML += `<div style="margin-bottom:10px;"><b>You:</b> ${prompt}</div>`;
+        chatBox.innerHTML += `<div style="margin-bottom:10px; color:#e0e0e0;"><b>You:</b> ${prompt}</div>`;
         document.getElementById('prompt-input').value = '';
         
         let res = await fetch('/api/ask', {
@@ -145,3 +145,4 @@ HTML_DASHBOARD = """
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+    
