@@ -11,6 +11,7 @@ from google import genai
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(32).hex()
 DB_NAME = "zeus_agent.db"
+client = genai.Client(api_key="YOUR_API_KEY_HERE")
 
 # ---------------------------------------------------------
 # DATABASE INITIALIZATION & PRE-FILLED CREDENTIALS
@@ -89,15 +90,12 @@ def api_ask(current_user):
     data = request.get_json()
     prompt = bleach.clean(data.get('prompt', ''))
     
-    p_lower = prompt.lower()
-    if "greece" in p_lower or "gods" in p_lower:
-        reply = "From the heights of Mount Olympus, the ancient Greek pantheon ruled over mortals, shaping myths that echo through eternity."
-    elif "rome" in p_lower or "caesar" in p_lower:
-        reply = "Rome grew from a modest republic into a mighty empire, its legions conquering vast territories and leaving a legacy of law and engineering."
-    elif "egypt" in p_lower or "pharaoh" in p_lower:
-        reply = "Along the banks of the Nile, the pharaohs built majestic pyramids and temples, anchoring their civilization in eternal mystery."
-    else:
-        reply = f"Ah, you ask about '{prompt}'. The annals of history hold many deep lessons regarding this era. Tell me more about what specific chapter you wish to explore."
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+        )
+        reply = response.text
+
         
     return jsonify({"response": reply})
     
