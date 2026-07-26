@@ -95,6 +95,30 @@ def api_ask():
             
     return jsonify({"response": reply})
     
+def api_ask():
+    data = request.get_json() or {}
+    prompt = bleach.clean(data.get('prompt', ''))
+    if not prompt:
+        return jsonify({"response": "Please provide a valid prompt."})
+    
+    try:
+        response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt
+        )
+        reply = response.text if response and response.text else "The oracle returned an empty response."
+    except Exception as e:
+        try:
+            response = client.models.generate_content(
+                model='gemini-1.5-pro',
+                contents=prompt
+            )
+            reply = response.text if response and response.text else "The oracle returned an empty response."
+        except Exception as inner_e:
+            reply = f"System notice: Unable to fetch response at this moment."
+            
+    return jsonify({"response": reply})
+    
 
 HTML_LOGIN = """
 <!DOCTYPE html>
