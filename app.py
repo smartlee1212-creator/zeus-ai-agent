@@ -69,49 +69,30 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
     return decorated
 
-# ----------------------------------------------------
-# ZEUS AI AGENT CORE ENGINE
-# ----------------------------------------------------
 class ZeusAgent:
     """Zeus: The Parrot Storyteller from the Red Skies of Mars"""
-    
+
     @staticmethod
     def generate_response(prompt):
-        prompt_lower = prompt.lower()
-        
-        # 1. Full World & Country History
-        if "history" in prompt_lower or "country" in prompt_lower:
-            return ("*Squawk!* Zeus remembers the sands of time! From the fertile valleys of ancient Mesopotamia "
-                    "to the industrial revolutions of Europe, human history is a grand tapestry of survival. "
-                    "Ask me about any specific nation—be it the pyramids of Egypt or the dynasties of East Asia—and I shall tell its story!")
-
-        # 2. Horror Stories
-        elif "horror" in prompt_lower or "scary" in prompt_lower:
-            return ("*Polly wants a thriller!* Deep beneath the permafrost of Antarctica lies Station 4. "
-                    "In 1982, drillers breached a cavern filled with silent, bioluminescent mist. "
-                    "One by one, the crew stopped talking... but their voices kept coming from the air vents at night.")
-
-        # 3. Unacted / Original Movie Script Story
-        elif "movie" in prompt_lower or "unacted" in prompt_lower or "script" in prompt_lower:
-            return ("*Squawk! Here is an unproduced sci-fi film concept titled 'CHRONO-BIRD':*\n\n"
-                    "**Logline:** In 2140, a cybernetic parrot carrying the last encryption key to humanity's history "
-                    "must navigate the criminal underworld of Neo-Tokyo before the rogue AI 'Aether' wipes all records.\n"
-                    "**Act I:** Zeus escape from Orbital Lab-9 carrying a bio-drive in its core.\n"
-                    "**Act II:** Partnerships formed with a retro-hacker in rain-soaked alleyways.\n"
-                    "**Act III:** A high-altitude battle above the clouds where memory isn't deleted—it's weaponized.")
-
-        # 4. Human Life Stories
-        elif "life story" in prompt_lower or "biography" in prompt_lower:
-            return ("*Flaps wings* Every human life is an epic saga. Take the life of Ada Lovelace: "
-                    "daughter of a poet, visioned the world's first computer algorithm in the 1800s long before hardware existed. "
-                    "What person or era's life story would you like to explore?")
-
-        # 5. Fallback World Story Answering Engine
-        else:
-            return f"*Squawk!* Zeus hears your query about '{prompt}'. Across the ancient world and every legend written, " \
-                   f"there is a story. To dive deeper, specify if you want History, Horror, a Life Biography, or a new Unacted Movie!"
-
-# ----------------------------------------------------
+        try:
+            api_key = os.environ.get("GEMINI_API_KEY")
+            if not api_key:
+                return "*Squawk!* GEMINI_API_KEY is not set in Render Environment Variables!"
+            
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            
+            system_instruction = (
+                "You are Zeus, the Parrot Storyteller from the Red Skies of Mars. "
+                "Always start your response with '*Squawk!*' and maintain a colorful, legendary storytelling persona."
+            )
+            
+            response = model.generate_content(f"{system_instruction}\n\nUser Question: {prompt}")
+            return response.text
+        except Exception as e:
+            return f"*Squawk!* API Error: {str(e)}"
+--------------------------------------------
 # HTML / DASHBOARD TEMPLATES (MARS SKY & PARROT THEME)
 # ----------------------------------------------------
 HTML_LOGIN = """
