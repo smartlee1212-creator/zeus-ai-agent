@@ -82,12 +82,13 @@ def api_ask():
         )
         reply = response.text if response and response.text else "The oracle returned an empty response."
     except Exception as e:
-        try:
+                try:
             response = client.models.generate_content(
-                                model='gemini-1.5-pro',
+                model='gemini-1.5-pro',
                 contents=prompt
             )
             reply = response.text if response and response.text else "The oracle returned an empty response."
+
         except Exception as inner_e:
             reply = f"System notice: Unable to fetch response at this moment. ({str(inner_e)})"
             
