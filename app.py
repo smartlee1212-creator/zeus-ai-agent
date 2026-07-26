@@ -3,106 +3,86 @@ import sqlite3
 import datetime
 import jwt
 from functools import wraps
-from flask import Flask, request, jsonify, render_template_string, redirect, url_for, session
+from flask import Flask, render_template_string, request, jsonify, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
+import bleach
 from google import genai
 
-
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.urandom(32).hex()
-DB_NAME = "zeus_agent.db"
-client = genai.Client(api_key="YOUR_API_KEY_HERE")
+app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey")
 
-# ---------------------------------------------------------
-# DATABASE INITIALIZATION & PRE-FILLED CREDENTIALS
-# ---------------------------------------------------------
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+DB_NAME = "zeus_agent.db"
+
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL
         )
-    ''')
+    """)
     cursor.execute("SELECT * FROM users WHERE username = 'admin'")
     if not cursor.fetchone():
-        hashed_pw = generate_password_hash('password123')
-        cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', hashed_pw))
+        hashed_pw = generate_password_hash("adminpassword")
+        cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", ("admin", hashed_pw))
     conn.commit()
     conn.close()
 
 init_db()
 
-def token_required(f):
+def login_required(f):
     @wraps(f)
-    def decorated(*args, **kwargs):
-        token = request.cookies.get('auth_token')
-        if not token:
-            return redirect(url_for('login_page'))
-        try:
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            current_user = data['username']
-        except:
-            return redirect(url_for('login_page'))
-        return f(current_user, *args, **kwargs)
-    return decorated
-
-# ---------------------------------------------------------
-# SERVER ROUTES
-# ---------------------------------------------------------
-@app.route('/')
-@token_required
-def dashboard(current_user):
-    return render_template_string(HTML_DASHBOARD)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/login', methods=['GET', 'POST'])
-def login_page():
+def login():
+    error = None
     if request.method == 'POST':
-        username = bleach.clean(request.form.get('username'))
+        username = request.form.get('username')
         password = request.form.get('password')
-        
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
         cursor.execute("SELECT password FROM users WHERE username = ?", (username,))
         row = cursor.fetchone()
         conn.close()
-        
         if row and check_password_hash(row[0], password):
-            token = jwt.encode({
-                'username': username,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
-            }, app.config['SECRET_KEY'], algorithm="HS256")
-            
-            response = redirect(url_for('dashboard'))
-            response.set_cookie('auth_token', token)
-            return response
-            
-        return render_template_string(HTML_LOGIN, error="Invalid Credentials")
-        
-    return render_template_string(HTML_LOGIN, error="")
-@token_required
+            session['logged_in'] = True
+            return redirect(url_for('index'))
+        else:
+            error = 'Invalid Credentials'
+    return render_template_string(HTML_LOGIN, error=error)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+@app.route('/')
+@login_required
+def index():
+    return render_template_string(HTML_DASHBOARD)
 
 @app.route('/api/ask', methods=['POST'])
-def api_ask(current_user):
-   
+@login_required
+def api_ask():
     data = request.get_json()
     prompt = bleach.clean(data.get('prompt', ''))
-    
+    try:
         response = client.models.generate_content(
-            "gemini-2.0-flash",
-            contents=prompt,
+            model='gemini-2.5-flash',
+            contents=f"You are Zeus, an ancient god of history and world storytelling. Answer this query in character: {prompt}"
         )
         reply = response.text
-
-        
+    except Exception as e:
+        reply = f"The mists of Olympus obscure my vision at the moment. (Error: {str(e)})"
     return jsonify({"response": reply})
-    
-
-# ---------------------------------------------
-# HTML TEMPLATES
-# ---------------------------------------------
 
 HTML_LOGIN = """
 <!DOCTYPE html>
@@ -130,7 +110,10 @@ HTML_DASHBOARD = """
 <head><title>Zeus AI Agent Dashboard</title></head>
 <body style="background: linear-gradient(rgba(20, 10, 10, 0.7), rgba(10, 5, 5, 0.8)), url('https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?q=80&w=1000&auto=format&fit=crop') no-repeat center center fixed; background-size:cover; color:#fff; font-family:sans-serif; padding:20px;">
     <div style="max-width: 600px; margin: auto;">
-        <h2>Zeus AI Agent Dashboard</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Zeus AI Agent Dashboard</h2>
+            <a href="/logout" style="color: #ff6b6b; text-decoration: none; font-weight: bold;">Logout</a>
+        </div>
         <div id="chat-box" style="background:rgba(15, 15, 15, 0.9); padding:15px; height:350px; overflow-y:scroll; border:1px solid #333; border-radius:8px; margin-bottom:15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);"></div>
         <div style="display:flex; gap:10px;">
             <input type="text" id="prompt-input" placeholder="Ask Zeus a story or history..." style="flex:1; padding:12px; background:rgba(30,30,30,0.9); color:#fff; border:1px solid #444; border-radius:4px;">
@@ -159,11 +142,6 @@ HTML_DASHBOARD = """
 </body>
 </html>
 """
-
-
-
-
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
