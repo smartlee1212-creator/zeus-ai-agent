@@ -91,7 +91,7 @@ def api_ask(current_user):
     prompt = bleach.clean(data.get('prompt', ''))
     
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            "gemini-2.0-flash".
             contents=prompt,
         )
         reply = response.text
