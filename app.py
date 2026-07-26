@@ -86,9 +86,18 @@ def api_ask():
     data = request.get_json()
     prompt = bleach.clean(data.get('prompt', ''))
     
-    # Zeus history/storytelling agent logic
-    reply = f"Zeus hears your query: '{prompt}.' The annals of history and legend record this well!"
+    p_lower = prompt.lower()
+    if "greece" in p_lower or "gods" in p_lower:
+        reply = "From the heights of Mount Olympus, the ancient Greek pantheon ruled over mortals, shaping myths that echo through eternity."
+    elif "rome" in p_lower or "caesar" in p_lower:
+        reply = "Rome grew from a modest republic into a mighty empire, its legions conquering vast territories and leaving a legacy of law and engineering."
+    elif "egypt" in p_lower or "pharaoh" in p_lower:
+        reply = "Along the banks of the Nile, the pharaohs built majestic pyramids and temples, anchoring their civilization in eternal mystery."
+    else:
+        reply = f"Ah, you ask about '{prompt}'. The annals of history hold many deep lessons regarding this era. Tell me more about what specific chapter you wish to explore."
+        
     return jsonify({"response": reply})
+    
 
 # ---------------------------------------------------------
 # HTML TEMPLATES
