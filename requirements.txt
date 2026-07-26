@@ -1,0 +1,6 @@
+flask
+pyjwt
+werkzeug
+bleach
+requests
+gunicorn
