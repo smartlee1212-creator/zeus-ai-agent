@@ -5,7 +5,8 @@ import jwt
 from functools import wraps
 from flask import Flask, request, jsonify, render_template_string, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
-import bleach
+from google import genai
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(32).hex()
@@ -80,9 +81,11 @@ def login_page():
         return render_template_string(HTML_LOGIN, error="Invalid Credentials")
         
     return render_template_string(HTML_LOGIN, error="")
+@token_required
 
 @app.route('/api/ask', methods=['POST'])
-def api_ask():
+def api_ask(current_user):
+   
     data = request.get_json()
     prompt = bleach.clean(data.get('prompt', ''))
     
@@ -99,26 +102,28 @@ def api_ask():
     return jsonify({"response": reply})
     
 
-# ---------------------------------------------------------
+# ---------------------------------------------
 # HTML TEMPLATES
-# ---------------------------------------------------------
+# ---------------------------------------------
+
 HTML_LOGIN = """
 <!DOCTYPE html>
 <html>
 <head><title>Zeus Login</title></head>
-<body style="font-family:sans-serif; background:#121212; color:#fff; display:flex; justify-content:center; align-items:center; height:100vh;">
-    <form method="POST" style="background:#1e1e1e; padding:20px; border-radius:8px;">
+<body style="font-family:sans-serif; background:#121212; color:#fff;">
+    <form method="POST" style="background:#1e1e1e; padding:20px;">
         <h2>Zeus Agent Login</h2>
         <p style="color:red;">{{ error }}</p>
         <label>Username:</label><br>
-        <input type="text" name="username" required style="width:100%; padding:8px; margin:5px 0;"><br>
+        <input type="text" name="username" required style="width:100%;"><br>
         <label>Password:</label><br>
-        <input type="password" name="password" required style="width:100%; padding:8px; margin:5px 0;"><br><br>
-        <button type="submit" style="width:100%; padding:10px; background:#007bff; color:#white; border:none; border-radius:4px;">Login</button>
+        <input type="password" name="password" required style="width:100%;"><br>
+        <button type="submit" style="width:100%; padding:10px;">Login</button>
     </form>
 </body>
 </html>
 """
+
 
 HTML_DASHBOARD = """
 <!DOCTYPE html>
