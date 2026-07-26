@@ -84,7 +84,7 @@ def api_ask():
     except Exception as e:
         try:
             response = client.models.generate_content(
-                model='gemini-flash',
+                                model='gemini-1.5-pro',
                 contents=prompt
             )
             reply = response.text if response and response.text else "The oracle returned an empty response."
