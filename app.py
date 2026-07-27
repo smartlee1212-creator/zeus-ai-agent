@@ -62,7 +62,7 @@ def login():
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         try:
-            init_db() # Ensure DB and admin user exist on every request if reset
+            init_db()
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT password FROM users WHERE email = ?", (email,))
@@ -203,4 +203,3 @@ HTML_DASHBOARD = """
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-    
