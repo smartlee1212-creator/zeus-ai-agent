@@ -39,7 +39,7 @@ def api_ask():
         return jsonify({"response": "Gemini API key is not configured."})
 
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         response = model.generate_content(prompt)
         reply = response.text if response and hasattr(response, 'text') else "No response."
     except Exception as e:
@@ -122,4 +122,3 @@ HTML_DASHBOARD = """
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-    
