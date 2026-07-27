@@ -69,7 +69,6 @@ def index():
 
 @app.route('/api/ask', methods=['POST'])
 @login_required
-
 def api_ask():
     data = request.get_json() or {}
     prompt = bleach.clean(data.get('prompt', ''))
@@ -78,14 +77,14 @@ def api_ask():
     
     try:
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.5-flash',
             contents=prompt
         )
         reply = response.text if response and response.text else "The oracle returned an empty response."
     except Exception as e:
         try:
             response = client.models.generate_content(
-                model='gemini-1.5-pro',
+                model='gemini-2.5-flash',
                 contents=prompt
             )
             reply = response.text if response and response.text else "The oracle returned an empty response."
