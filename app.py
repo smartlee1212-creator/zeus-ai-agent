@@ -22,27 +22,28 @@ if GEMINI_AVAILABLE:
 
 DB_NAME = "zeus_agent.db"
 
+def get_db_connection():
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 def init_db():
-    try:
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL
-            )
-        """)
-        cursor.execute("SELECT * FROM users WHERE email = 'admin@zeus.com'")
-        if not cursor.fetchone():
-            hashed_pw = generate_password_hash("adminpassword")
-            cursor.execute("INSERT INTO users (email, password) VALUES (?, ?)", 
-                         ("admin@zeus.com", hashed_pw))
-        conn.commit()
-    except Exception:
-        pass
-    finally:
-        conn.close()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+    """)
+    cursor.execute("SELECT * FROM users WHERE email = 'admin@zeus.com'")
+    if not cursor.fetchone():
+        hashed_pw = generate_password_hash("adminpassword")
+        cursor.execute("INSERT INTO users (email, password) VALUES (?, ?)", 
+                     ("admin@zeus.com", hashed_pw))
+    conn.commit()
+    conn.close()
 
 init_db()
 
@@ -61,20 +62,21 @@ def login():
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         try:
-            conn = sqlite3.connect(DB_NAME)
+            init_db() # Ensure DB and admin user exist on every request if reset
+            conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT password FROM users WHERE email = ?", (email,))
             row = cursor.fetchone()
             conn.close()
 
-            if row and check_password_hash(row[0], password):
+            if row and check_password_hash(row['password'], password):
                 session['logged_in'] = True
                 session['email'] = email
                 return redirect(url_for('index'))
             else:
                 error = 'Invalid Email or Password'
-        except Exception:
-            error = 'System error during login'
+        except Exception as e:
+            error = f'System error during login: {str(e)}'
     return render_template_string(HTML_LOGIN, error=error)
 
 @app.route('/logout')
@@ -201,4 +203,4 @@ HTML_DASHBOARD = """
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-                
+    
