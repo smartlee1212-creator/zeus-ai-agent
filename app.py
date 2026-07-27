@@ -69,7 +69,6 @@ def index():
 
 @app.route('/api/ask', methods=['POST'])
 @login_required
-
 def api_ask():
     data = request.get_json() or {}
     prompt = bleach.clean(data.get('prompt', ''))
@@ -93,9 +92,6 @@ def api_ask():
             reply = f"System notice: Unable to fetch response at this moment."
             
     return jsonify({"response": reply})
-
-    
-    
 
 HTML_LOGIN = """
 <!DOCTYPE html>
@@ -184,4 +180,4 @@ HTML_DASHBOARD = """
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-        
+    
