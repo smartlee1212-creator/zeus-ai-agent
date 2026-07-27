@@ -9,6 +9,7 @@ from google import genai
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "supersecretkey")
 
+# Initialize the Google GenAI client properly
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 DB_NAME = "zeus_agent.db"
 
@@ -76,20 +77,22 @@ def api_ask():
         return jsonify({"response": "Please provide a valid prompt."})
     
     try:
+        # Using the current stable gemini-3.6-flash model ID
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.6-flash',
             contents=prompt
         )
         reply = response.text if response and response.text else "The oracle returned an empty response."
     except Exception as e:
         try:
+            # Fallback retry attempt using gemini-3.5-flash
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-3.5-flash',
                 contents=prompt
             )
             reply = response.text if response and response.text else "The oracle returned an empty response."
         except Exception as inner_e:
-            reply = f"System notice: Unable to fetch response at this moment."
+            reply = f"System notice: Unable to fetch response at this moment. Details: {str(inner_e)}"
             
     return jsonify({"response": reply})
 
@@ -98,11 +101,11 @@ HTML_LOGIN = """
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - Zeus AI</title>
 </head>
 <body style="background: #0f172a url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed; background-size: cover; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
     <div style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); padding: 30px; border-radius: 12px; width: 320px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.1);">
-        <h2 style="color: #fff; text-align: center; margin-top: 0; font-weight: 500;">Welcome Back</h2>
+        <h2 style="color: #fff; text-align: center; margin-top: 0; font-weight: 500;">Zeus AI Agent</h2>
         <p style="color: #64748b; text-align: center; font-size: 12px; margin-top: -5px; margin-bottom: 15px;">Login: admin@zeus.com / adminpassword</p>
         {% if error %}<p style="color: #f87171; text-align: center; font-size: 13px; margin-bottom: 15px;">{{ error }}</p>{% endif %}
         <form method="POST">
@@ -122,18 +125,18 @@ HTML_DASHBOARD = """
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Assistant</title>
+    <title>Zeus AI Dashboard</title>
 </head>
 <body style="background: #0f172a url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed; background-size: cover; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column;">
     
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-        <span style="font-weight: 600; font-size: 16px; letter-spacing: 0.5px;">Chat Assistant</span>
+        <span style="font-weight: 600; font-size: 16px; letter-spacing: 0.5px;">Zeus AI Agent</span>
         <a href="/logout" style="color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: 500;">Logout</a>
     </div>
 
     <div style="flex: 1; max-width: 700px; width: 100%; margin: 20px auto; display: flex; flex-direction: column; padding: 0 15px; box-sizing: border-box; overflow: hidden;">
         <div id="chat-box" style="flex: 1; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); padding: 20px; overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px;">
-            <div style="color: #64748b; text-align: center; font-size: 13px; margin-top: auto; margin-bottom: auto;">How can I help you today?</div>
+            <div style="color: #64748b; text-align: center; font-size: 13px; margin-top: auto; margin-bottom: auto;">Zeus is live. Ask him anything!</div>
         </div>
 
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
