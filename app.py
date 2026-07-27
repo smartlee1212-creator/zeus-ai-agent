@@ -69,6 +69,7 @@ def index():
 
 @app.route('/api/ask', methods=['POST'])
 @login_required
+
 def api_ask():
     data = request.get_json() or {}
     prompt = bleach.clean(data.get('prompt', ''))
